@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>人数オープン風 数字演出</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="stage">
+    <h1>人数オープン風 演出</h1>
+    <p class="sub">回転を続けて、開示ボタンで一の位から順に確定するデモ</p>
+
+    <div class="controls">
+      <div class="input-wrap">
+        <label for="priceInput">人数</label>
+        <input id="priceInput" type="number" min="0" max="9999999" value="120" step="1" />
+      </div>
+      <div class="button-wrap">
+        <button id="spinBtn">回転する</button>
+        <button id="revealBtn">開示する</button>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="lights" id="lights"></div>
+      <div class="display" id="display"></div>
+      <div class="flash" id="flash"></div>
+    </div>
+
+    <div class="message" id="message">「回転する」で回転開始、「開示する」で一の位から順に確定します</div>
+    <div class="hint">最大 9,999,999 人まで表示できます</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
