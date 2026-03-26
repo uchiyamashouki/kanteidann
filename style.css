@@ -300,7 +300,7 @@ button:disabled {
 
 /* 0〜9を縦に並べた帯 */
 ..strip {
-  position: absolute;
+  position: absolute;　
   top: 0;        
   left: 0;
   width: 100%;
