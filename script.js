@@ -1,278 +1,157 @@
-// HTML上の各部品を取得する
-const priceInput = document.getElementById("priceInput");
+/* ---------------------------------
+   要素取得
+--------------------------------- */
+const input = document.getElementById("numInput");
 const spinBtn = document.getElementById("spinBtn");
 const revealBtn = document.getElementById("revealBtn");
-const display = document.getElementById("display");
+const board = document.getElementById("board");
 const message = document.getElementById("message");
 const flash = document.getElementById("flash");
-const lights = document.getElementById("lights");
 
-// 表示中の桁やカンマなどをまとめて保持する配列
+/* ---------------------------------
+   状態管理
+--------------------------------- */
 let slots = [];
-
-// 回転用の setInterval のID
 let spinTimer = null;
-
-// 今回転中かどうか
 let isSpinning = false;
-
-// 今、開示演出中かどうか
 let isRevealing = false;
-// 次に開示する桁のインデックス
-// digitSlots に対して「右端から何番目まで開示したか」を管理する
+
+// 次に開示する桁（右から）
 let revealIndex = -1;
-/* ---------------------------------
-   舞台の周りの電球を作る
---------------------------------- */
-function buildLights() {
-  const bulbs = [];
-  const count = 28; // 電球の数
-
-  for (let i = 0; i < count; i++) {
-    const bulb = document.createElement("div");
-    bulb.className = "bulb";
-
-    // 電球ごとにアニメーション開始タイミングを少しずらす
-    bulb.style.animationDelay = `${(i % 7) * 0.08}s`;
-
-    let x, y;
-
-    // 上辺に並べる
-    if (i < 8) {
-      x = 8 + (i / 7) * 84;
-      y = 4;
-
-    // 右辺に並べる
-    } else if (i < 14) {
-      x = 94;
-      y = 8 + (i - 8) * 14;
-
-    // 下辺に並べる
-    } else if (i < 22) {
-      x = 92 - (i - 14) * 11;
-      y = 92;
-
-    // 左辺に並べる
-    } else {
-      x = 4;
-      y = 88 - (i - 22) * 14;
-    }
-
-    bulb.style.left = `${x}%`;
-    bulb.style.top = `${y}%`;
-    bulbs.push(bulb);
-  }
-
-  // まとめて lights の中へ入れる
-  lights.replaceChildren(...bulbs);
-}
 
 /* ---------------------------------
-   入力値を 0 ～ 9,999,999 に収める
+   スロット生成
 --------------------------------- */
-function clampValue() {
-  const value = Math.max(0, Math.min(9999999, Math.floor(Number(priceInput.value) || 0)));
-
-  // 補正後の値を input に戻して表示も揃える
-  priceInput.value = value;
-  return value;
-}
-
-/* ---------------------------------
-   1桁分の表示枠を作る
-   中には 0〜9 を何周分も縦に並べる
---------------------------------- */
-function createDigitStrip(initialDigit = 0) {
-  const digit = document.createElement("div");
-  digit.className = "digit";
-
-  // 数字が縦に並ぶ帯
-  const strip = document.createElement("div");
-  strip.className = "strip";
-
-  // 0〜9 を24回繰り返して縦に並べる
-  // これを上下に動かして回転風に見せる
-  for (let loop = 0; loop < 24; loop++) {
-    for (let n = 0; n <= 9; n++) {
-      const item = document.createElement("div");
-      item.className = "num";
-      item.textContent = n;
-      strip.appendChild(item);
-    }
-  }
-
-  // 数字の中央位置を見やすくするためのガイドレイヤー
-  const windowLayer = document.createElement("div");
-  windowLayer.className = "digit-window";
-
-  const centerGuide = document.createElement("div");
-  centerGuide.className = "digit-center-guide";
-  windowLayer.appendChild(centerGuide);
-
-  digit.appendChild(strip);
-  digit.appendChild(windowLayer);
-
-  // 各桁の状態も一緒に返す
-  return {
-    type: "digit",     // このslotは数字の桁
-    el: digit,         // 実際のHTML要素
-    strip,             // 上下に動かす帯
-    index: initialDigit, // 今表示中の数字
-    locked: false,     // trueなら回転停止
-    target: initialDigit, // 最終的に止めたい数字
-  };
-}
-
-/* ---------------------------------
-   カンマを作る
---------------------------------- */
-function createComma() {
-  const comma = document.createElement("div");
-  comma.className = "comma show";
-  comma.textContent = ",";
-  return { type: "comma", el: comma };
-}
-
-/* ---------------------------------
-   単位「人」を作る
---------------------------------- */
-function createUnit() {
-  const unit = document.createElement("div");
-  unit.className = "unit show";
-  unit.textContent = "人";
-  return { type: "unit", el: unit };
-}
-
-/* ---------------------------------
-   指定した桁に、指定した数字が見えるように
-   strip の位置を動かす
---------------------------------- */
-function setDigitVisual(slot, digitValue, animate = false, duration = 160) {
-  // 1つの数字ブロックの高さを取得
-  const numEl = slot.strip.querySelector(".num");
-  const digitHeight = numEl ? numEl.offsetHeight : slot.el.clientHeight;
-
-  // 今の数字状態を更新
-  slot.index = digitValue;
-
-  // アニメーションあり / なし を切り替える
-  slot.strip.style.transition = animate
-    ? `transform ${duration}ms cubic-bezier(.17,.89,.32,1.18)`
-    : "none";
-
-  // 何周もしている中の真ん中あたりを使う
-  // 端の方を使うと見た目が不自然になるため
-  const baseLoop = 12;
-
-  // 目的の数字の位置まで上にずらす量を計算
-
-  const pos = (baseLoop * 10 + digitValue) * digitHeight;
-   
-  // strip を上方向に移動させる
-  slot.strip.style.transform = `translateY(-${pos}px)`;
-}
-
-/* ---------------------------------
-   入力された値から表示全体を作り直す
---------------------------------- */
-function buildDisplayFromValue(value) {
-  const formatted = Number(value).toLocaleString("ja-JP"); // 例: 12345 -> "12,345"
-
-  display.innerHTML = "";
+function buildSlots(value) {
+  board.innerHTML = "";
   slots = [];
 
-  // 数字全体を囲う背景枠
-  const digitStage = document.createElement("div");
-  digitStage.className = "digit-stage";
+  const formatted = Number(value).toLocaleString("ja-JP");
 
-  // 文字ごとに部品を作る
   for (const ch of formatted) {
-    if (/\d/.test(ch)) {
-      // 数字なら桁を作る
-      const slot = createDigitStrip(Number(ch));
-      slots.push(slot);
-      digitStage.appendChild(slot.el);
+    const div = document.createElement("div");
 
-    } else if (ch === ",") {
-      // カンマならカンマを作る
-      const slot = createComma();
-      slots.push(slot);
-      digitStage.appendChild(slot.el);
+    if (ch === ",") {
+      div.className = "comma";
+      div.textContent = ",";
+      board.appendChild(div);
+
+      slots.push({
+        type: "comma",
+        el: div
+      });
+    } else {
+      div.className = "digit";
+      div.textContent = "0";
+      board.appendChild(div);
+
+      slots.push({
+        type: "digit",
+        el: div,
+        value: 0,
+        target: 0,
+        locked: false
+      });
     }
   }
-
-  // 最後に単位「人」を追加
-  const unit = createUnit();
-  slots.push(unit);
-  digitStage.appendChild(unit.el);
-
-  // 全体を display に追加
-  display.appendChild(digitStage);
-
-  // DOM配置後でないと高さが取れないので、
-  // 次の描画タイミングで各桁の位置を合わせる
-  requestAnimationFrame(() => {
-    slots.forEach((slot) => {
-      if (slot.type === "digit") {
-        setDigitVisual(slot, slot.index, false);
-      }
-    });
-  });
 }
 
 /* ---------------------------------
-   入力欄の内容と表示桁数が合っているか確認し、
-   必要なら表示を作り直す
+   入力と表示を同期
 --------------------------------- */
 function ensureDisplayMatchesInput() {
-  const value = clampValue();
-  const formattedLength = Number(value).toLocaleString("ja-JP").length;
+  const value = input.value.replace(/[^0-9]/g, "") || "0";
 
-  // unit 以外の要素数で現在の表示長を確認
-  const currentLength = slots.filter((s) => s.type !== "unit").length;
+  const currentLength = slots.filter(s => s.type === "digit").length;
+  const newLength = value.length;
 
-  // 初回や桁数変化時は作り直す
-  if (!slots.length || formattedLength !== currentLength) {
-    buildDisplayFromValue(value);
+  if (currentLength !== newLength) {
+    buildSlots(value);
   }
 
   return value;
 }
 
 /* ---------------------------------
-   回転中の1コマ分だけ数字を進める
+   数字の見た目更新
+--------------------------------- */
+function setDigitVisual(slot, value, animate = false, duration = 200) {
+  slot.value = value;
+  slot.el.textContent = value;
+
+  if (animate) {
+    slot.el.style.transition = `transform ${duration}ms ease-out`;
+    slot.el.style.transform = "scale(1.3)";
+    setTimeout(() => {
+      slot.el.style.transform = "scale(1)";
+    }, duration);
+  }
+}
+
+/* ---------------------------------
+   回転処理
 --------------------------------- */
 function tickSpin() {
-  slots.forEach((slot) => {
-    // 数字以外、またはロック済みは処理しない
-    if (slot.type !== "digit" || slot.locked) return;
-
-    // 0〜9をループさせる
-    const next = (slot.index + 1) % 10;
-    setDigitVisual(slot, next, false);
-  });
+  for (const slot of slots) {
+    if (slot.type === "digit" && !slot.locked) {
+      const next = Math.floor(Math.random() * 10);
+      setDigitVisual(slot, next);
+    }
+  }
 }
 
 /* ---------------------------------
    回転開始
 --------------------------------- */
-async function revealDigits() {
-  // 連打防止
+function startSpin() {
   if (isRevealing) return;
 
   const value = ensureDisplayMatchesInput();
   const formatted = Number(value).toLocaleString("ja-JP");
 
-  // 数字の桁だけを取り出す
+  let digitPtr = 0;
+
+  for (const ch of formatted) {
+    if (/\d/.test(ch)) {
+      while (slots[digitPtr] && slots[digitPtr].type !== "digit") {
+        digitPtr++;
+      }
+
+      if (slots[digitPtr]) {
+        slots[digitPtr].locked = false;
+        slots[digitPtr].target = Number(ch);
+        digitPtr++;
+      }
+    }
+  }
+
+  // 開示状態リセット
+  revealIndex = -1;
+
+  if (spinTimer) clearInterval(spinTimer);
+  spinTimer = setInterval(tickSpin, 65);
+
+  isSpinning = true;
+  message.textContent = "数字を回転中…「開示する」で一桁ずつ確定します";
+}
+
+/* ---------------------------------
+   1回押すごとに1桁だけ開示
+--------------------------------- */
+async function revealDigits() {
+  if (isRevealing) return;
+
+  const value = ensureDisplayMatchesInput();
+  const formatted = Number(value).toLocaleString("ja-JP");
+
   const digitSlots = slots.filter((slot) => slot.type === "digit");
   const digits = formatted.replace(/,/g, "").split("");
 
-  // 各桁の停止目標を設定
   digitSlots.forEach((slot, i) => {
     slot.target = Number(digits[i]);
   });
 
-  // まだ回っていなければ少し回してから開始
+  // 回ってなければ回す
   if (!isSpinning) {
     startSpin();
     await wait(250);
@@ -282,12 +161,12 @@ async function revealDigits() {
   spinBtn.disabled = true;
   revealBtn.disabled = true;
 
-  // 初回なら一の位（右端）から始める
+  // 初回は一の位から
   if (revealIndex === -1) {
     revealIndex = digitSlots.length - 1;
   }
 
-  // もう全部開示済みなら何もしない
+  // 全部終わってたら何もしない
   if (revealIndex < 0) {
     isRevealing = false;
     spinBtn.disabled = false;
@@ -306,10 +185,10 @@ async function revealDigits() {
 
   await wait(260 + revealOrder * 180);
 
-  // 次は1つ左の桁
+  // 次の桁へ
   revealIndex--;
 
-  // 全部開示し終わったら停止
+  // 全部開示完了
   if (revealIndex < 0) {
     if (spinTimer) {
       clearInterval(spinTimer);
@@ -331,63 +210,21 @@ async function revealDigits() {
   spinBtn.disabled = false;
   revealBtn.disabled = false;
 }
-  // すでにタイマーがあれば一旦消す
-  if (spinTimer) clearInterval(spinTimer);
-
-  // 65msごとに1コマ進める
-  spinTimer = setInterval(tickSpin, 65);
-  isSpinning = true;
-  message.textContent = "数字を回転中…「開示する」で確定します";
-}
 
 /* ---------------------------------
-   指定時間待つための補助関数
+   待機用
 --------------------------------- */
 function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /* ---------------------------------
-   ボタン操作
+   イベント
 --------------------------------- */
-
-// 「回転する」ボタン
 spinBtn.addEventListener("click", startSpin);
-
-// 「開示する」ボタン
 revealBtn.addEventListener("click", revealDigits);
-
-/* ---------------------------------
-   入力値が変わったとき
-   回転中・開示中でなければ即時反映
---------------------------------- */
-priceInput.addEventListener("input", () => {
-  if (!isSpinning && !isRevealing) {
-    buildDisplayFromValue(clampValue());
-  }
-});
-
-/* ---------------------------------
-   キーボード操作
-   Enter       -> 開示
-   Shift+Enter -> 回転
---------------------------------- */
-priceInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && e.shiftKey) {
-    e.preventDefault();
-    startSpin();
-  } else if (e.key === "Enter") {
-    e.preventDefault();
-    revealDigits();
-  }
-});
 
 /* ---------------------------------
    初期表示
 --------------------------------- */
-
-// 電球を作る
-buildLights();
-
-// 初期値を表示する
-buildDisplayFromValue(clampValue());
+buildSlots(input.value || "0");
