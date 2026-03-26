@@ -98,7 +98,7 @@ function createDigitSlot() {
 }
 
 /* ---------------------------------
-   本物のスロット生成
+   スロット生成
 --------------------------------- */
 function buildSlots(value) {
   board.innerHTML = "";
@@ -135,6 +135,7 @@ function buildSlots(value) {
 
   buildLights();
 
+  // 初期表示位置をそろえる
   slots.forEach((slot) => {
     if (slot.type === "digit") {
       setDigitVisual(slot, 0, false, 0);
@@ -145,51 +146,19 @@ function buildSlots(value) {
 }
 
 /* ---------------------------------
-   隠し表示（?）生成
+   入力と表示を同期
 --------------------------------- */
-function buildSlotsHidden(value) {
-  board.innerHTML = "";
-  slots = [];
+function ensureDisplayMatchesInput() {
+  const value = String(input.value).replace(/[^0-9]/g, "") || "0";
 
-  const stage = document.createElement("div");
-  stage.className = "digit-stage";
-  board.appendChild(stage);
+  const currentLength = slots.filter(s => s.type === "digit").length;
+  const newLength = value.length;
 
-  const formatted = Number(value).toLocaleString("ja-JP");
-
-  for (const ch of formatted) {
-    if (ch === ",") {
-      const comma = document.createElement("div");
-      comma.className = "comma show";
-      comma.textContent = ",";
-      stage.appendChild(comma);
-      continue;
-    }
-
-    const digit = document.createElement("div");
-    digit.className = "digit";
-
-    const mark = document.createElement("div");
-    mark.className = "num";
-    mark.textContent = "?";
-
-    digit.appendChild(mark);
-    stage.appendChild(digit);
+  if (currentLength !== newLength) {
+    buildSlots(value);
   }
 
-  const unit = document.createElement("div");
-  unit.className = "unit show";
-  unit.textContent = "人";
-  stage.appendChild(unit);
-
-  buildLights();
-}
-
-/* ---------------------------------
-   入力値を取得
---------------------------------- */
-function getInputValue() {
-  return String(input.value).replace(/[^0-9]/g, "") || "0";
+  return value;
 }
 
 /* ---------------------------------
@@ -207,6 +176,8 @@ function setDigitVisual(slot, value, animate = false, duration = 200) {
   slot.value = value;
 
   const digitHeight = getDigitHeight(slot);
+
+  // 真ん中の周回を使う
   const centerLoopIndex = DIGIT_COUNT + value;
   const y = -(centerLoopIndex * digitHeight);
 
@@ -235,11 +206,8 @@ function tickSpin() {
 function startSpin() {
   if (isRevealing) return;
 
-  const value = getInputValue();
+  const value = ensureDisplayMatchesInput();
   const formatted = Number(value).toLocaleString("ja-JP");
-
-  // ?表示から本物の数字スロットへ切り替える
-  buildSlots(value);
 
   let digitPtr = 0;
 
@@ -252,8 +220,6 @@ function startSpin() {
       if (slots[digitPtr]) {
         slots[digitPtr].locked = false;
         slots[digitPtr].target = Number(ch);
-        slots[digitPtr].spinOffset = Math.floor(Math.random() * 10);
-        setDigitVisual(slots[digitPtr], slots[digitPtr].spinOffset, false, 0);
         digitPtr++;
       }
     }
@@ -265,9 +231,7 @@ function startSpin() {
   spinTimer = setInterval(tickSpin, 65);
 
   isSpinning = true;
-  if (message) {
-    message.textContent = "数字を回転中…「開示する」で一桁ずつ確定します";
-  }
+  message.textContent = "数字を回転中…「開示する」で一桁ずつ確定します";
 }
 
 /* ---------------------------------
@@ -276,14 +240,8 @@ function startSpin() {
 async function revealDigits() {
   if (isRevealing) return;
 
-  const value = getInputValue();
+  const value = ensureDisplayMatchesInput();
   const formatted = Number(value).toLocaleString("ja-JP");
-
-  // まだ回転していなければ、先に回転開始
-  if (!isSpinning) {
-    startSpin();
-    await wait(250);
-  }
 
   const digitSlots = slots.filter((slot) => slot.type === "digit");
   const digits = formatted.replace(/,/g, "").split("");
@@ -291,6 +249,11 @@ async function revealDigits() {
   digitSlots.forEach((slot, i) => {
     slot.target = Number(digits[i]);
   });
+
+  if (!isSpinning) {
+    startSpin();
+    await wait(250);
+  }
 
   isRevealing = true;
   spinBtn.disabled = true;
@@ -331,13 +294,8 @@ async function revealDigits() {
     void flash.offsetWidth;
     flash.classList.add("play");
 
-    if (message) {
-      message.textContent = `参加人数 ${formatted} 人`;
-    }
   } else {
-    if (message) {
-      message.textContent = "人数を開示中…「開示する」で次の桁を確定します";
-    }
+    message.textContent = "人数を開示中…「開示する」で次の桁を確定します";
   }
 
   isRevealing = false;
@@ -349,7 +307,7 @@ async function revealDigits() {
    待機用
 --------------------------------- */
 function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /* ---------------------------------
@@ -359,34 +317,13 @@ spinBtn.addEventListener("click", startSpin);
 revealBtn.addEventListener("click", revealDigits);
 
 input.addEventListener("input", () => {
-  const value = getInputValue();
-
-  // 回転中なら停止
-  if (spinTimer) {
-    clearInterval(spinTimer);
-    spinTimer = null;
-  }
-
-  isSpinning = false;
-  isRevealing = false;
-  revealIndex = -1;
-
-  spinBtn.disabled = false;
-  revealBtn.disabled = false;
-
-  buildSlotsHidden(value);
-
-  if (message) {
-    message.textContent = "";
-  }
+  buildSlots(ensureDisplayMatchesInput());
 });
 
 window.addEventListener("resize", () => {
   buildLights();
-
-  // 回転中・開示後の本物スロットだけ位置補正
   slots.forEach((slot) => {
-    if (slot.type === "digit" && slot.strip) {
+    if (slot.type === "digit") {
       setDigitVisual(slot, slot.value, false, 0);
     }
   });
@@ -395,7 +332,4 @@ window.addEventListener("resize", () => {
 /* ---------------------------------
    初期表示
 --------------------------------- */
-buildSlotsHidden(input.value || "0");
-if (message) {
-  message.textContent = "";
-}
+buildSlots(input.value || "0");
