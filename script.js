@@ -18,7 +18,9 @@ let isSpinning = false;
 
 // 今、開示演出中かどうか
 let isRevealing = false;
-
+// 次に開示する桁のインデックス
+// digitSlots に対して「右端から何番目まで開示したか」を管理する
+let revealIndex = -1;
 /* ---------------------------------
    舞台の周りの電球を作る
 --------------------------------- */
@@ -254,30 +256,81 @@ function tickSpin() {
 /* ---------------------------------
    回転開始
 --------------------------------- */
-function startSpin() {
-  // 開示中は回転開始しない
+async function revealDigits() {
+  // 連打防止
   if (isRevealing) return;
 
   const value = ensureDisplayMatchesInput();
   const formatted = Number(value).toLocaleString("ja-JP");
-  let digitPtr = 0;
 
-  // 各桁の target（最終的に止めたい数字）をセット
-  for (const ch of formatted) {
-    if (/\d/.test(ch)) {
-      // slots の中から次の digit を探す
-      while (slots[digitPtr] && slots[digitPtr].type !== "digit") {
-        digitPtr++;
-      }
+  // 数字の桁だけを取り出す
+  const digitSlots = slots.filter((slot) => slot.type === "digit");
+  const digits = formatted.replace(/,/g, "").split("");
 
-      if (slots[digitPtr]) {
-        slots[digitPtr].locked = false;          // 回転可能にする
-        slots[digitPtr].target = Number(ch);     // 目標数字を保存
-        digitPtr++;
-      }
-    }
+  // 各桁の停止目標を設定
+  digitSlots.forEach((slot, i) => {
+    slot.target = Number(digits[i]);
+  });
+
+  // まだ回っていなければ少し回してから開始
+  if (!isSpinning) {
+    startSpin();
+    await wait(250);
   }
 
+  isRevealing = true;
+  spinBtn.disabled = true;
+  revealBtn.disabled = true;
+
+  // 初回なら一の位（右端）から始める
+  if (revealIndex === -1) {
+    revealIndex = digitSlots.length - 1;
+  }
+
+  // もう全部開示済みなら何もしない
+  if (revealIndex < 0) {
+    isRevealing = false;
+    spinBtn.disabled = false;
+    revealBtn.disabled = false;
+    return;
+  }
+
+  const slot = digitSlots[revealIndex];
+  const revealOrder = digitSlots.length - 1 - revealIndex;
+
+  // この桁を止める
+  slot.locked = true;
+
+  const settleDuration = 260 + revealOrder * 140;
+  setDigitVisual(slot, slot.target, true, settleDuration);
+
+  await wait(260 + revealOrder * 180);
+
+  // 次は1つ左の桁
+  revealIndex--;
+
+  // 全部開示し終わったら停止
+  if (revealIndex < 0) {
+    if (spinTimer) {
+      clearInterval(spinTimer);
+      spinTimer = null;
+    }
+
+    isSpinning = false;
+
+    flash.classList.remove("play");
+    void flash.offsetWidth;
+    flash.classList.add("play");
+
+    message.textContent = `参加人数 ${formatted} 人`;
+  } else {
+    message.textContent = "人数を開示中…「開示する」で次の桁を確定します";
+  }
+
+  isRevealing = false;
+  spinBtn.disabled = false;
+  revealBtn.disabled = false;
+}
   // すでにタイマーがあれば一旦消す
   if (spinTimer) clearInterval(spinTimer);
 
