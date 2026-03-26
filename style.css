@@ -249,14 +249,12 @@ button:disabled {
   height: clamp(68px, 10vw, 110px);
   border-radius: 16px;
   position: relative;
-  overflow: hidden; /* 中の数字帯を切り取る */
+  overflow: hidden;
   background: linear-gradient(180deg, #2b0000 0%, #560000 35%, #b00000 100%);
   border: 2px solid rgba(255,240,180,0.35);
   box-shadow:
     inset 0 0 24px rgba(255,255,255,0.08),
     0 10px 20px rgba(0,0,0,0.35);
-  display: grid;
-  place-items: center;
 }
 
 /* 桁枠の上に被せる光沢 */
