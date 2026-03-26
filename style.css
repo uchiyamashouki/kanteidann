@@ -299,8 +299,9 @@ button:disabled {
 }
 
 /* 0〜9を縦に並べた帯 */
-.strip {
+..strip {
   position: absolute;
+  top: 0;        
   left: 0;
   width: 100%;
   will-change: transform; /* transform が頻繁に変わることをブラウザに伝える */
