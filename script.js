@@ -163,7 +163,9 @@ function setDigitVisual(slot, digitValue, animate = false, duration = 160) {
   const baseLoop = 12;
 
   // 目的の数字の位置まで上にずらす量を計算
-  const pos = (baseLoop * 10 + digitValue) * digitHeight;
+  // 表示位置が +5 ずれているので補正
+  const offsetCorrection = 5;
+  const pos = (baseLoop * 10 + digitValue - offsetCorrection) * digitHeight;
    
   // strip を上方向に移動させる
   slot.strip.style.transform = `translateY(-${pos}px)`;
