@@ -212,23 +212,8 @@ button:disabled {
 
 /* 数字全体の背景枠 */
 .digit-stage {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(4px, 0.8vw, 12px);
-  padding: 20px 20px 18px 14px;/*要微修正*/
-  border-radius: 22px;
-  background:
-    linear-gradient(180deg, rgba(70, 12, 12, 0.92), rgba(35, 5, 5, 0.96)),
-    radial-gradient(circle at center, rgba(255, 210, 120, 0.10), transparent 68%);
-  border: 2px solid rgba(255, 215, 140, 0.35);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.05),
-    inset 0 0 24px rgba(255,210,120,0.08),
-    0 10px 30px rgba(0,0,0,0.28);
-
-  margin: 0 auto;
+  gap: clamp(6px, 1vw, 14px);
+  padding: 18px 18px 18px 18px;
 }
 
 /* digit-stage の内側の飾り線 */
@@ -250,16 +235,11 @@ button:disabled {
 
 /* 各桁 */
 .digit {
-  width: clamp(38px, 6vw, 74px);
-  height: clamp(68px, 10vw, 110px);
-  border-radius: 16px;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, #2b0000 0%, #560000 35%, #b00000 100%);
-  border: 2px solid rgba(255,240,180,0.35);
-  box-shadow:
-    inset 0 0 24px rgba(255,255,255,0.08),
-    0 10px 20px rgba(0,0,0,0.35);
+  width: clamp(64px, 9vw, 108px);
+  height: clamp(96px, 14vw, 150px);
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
 }
 
 /* 桁枠の上に被せる光沢 */
@@ -282,6 +262,8 @@ button:disabled {
 .digit-window {
   position: absolute;
   inset: 0;
+  display: grid;
+  place-items: center;
   pointer-events: none;
   z-index: 3;
 }
@@ -289,39 +271,41 @@ button:disabled {
 /* 数字が見える中心位置を視覚的に示す */
 .digit-center-guide {
   position: absolute;
-  left: 8%;
-  right: 8%;
+  left: 6%;
+  right: 6%;
   top: 50%;
-  height: clamp(68px, 10vw, 110px);
+  height: 76%;
   transform: translateY(-50%);
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
-  border-top: 1px solid rgba(255,255,255,0.16);
-  border-bottom: 1px solid rgba(0,0,0,0.24);
-  box-shadow: inset 0 0 18px rgba(255,220,140,0.08);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
+  border-top: 1px solid rgba(255,255,255,0.18);
+  border-bottom: 1px solid rgba(0,0,0,0.28);
+  box-shadow: inset 0 0 22px rgba(255,220,140,0.12);
 }
 
 /* 0〜9を縦に並べた帯 */
 .strip {
   position: absolute;
-  top: 0;/*top関数ってあるのかな*/        
+  top: 0;
   left: 0;
   width: 100%;
-  will-change: transform; /* transform が頻繁に変わることをブラウザに伝える */
+  will-change: transform;
 }
 
 /* 1つ1つの数字 */
 .num {
   width: 100%;
-  height: clamp(68px, 10vw, 110px);
+  height: clamp(96px, 14vw, 150px);
   display: grid;
   place-items: center;
-  font-size: clamp(2rem, 4.4vw, 4.2rem);
+  font-size: clamp(3.8rem, 8vw, 7rem);
+  line-height: 1;
   font-weight: 900;
+  letter-spacing: -0.04em;
   color: #fff4bf;
   text-shadow:
-    0 0 12px rgba(255,240,180,0.55),
-    0 4px 0 rgba(90,20,0,0.8);
+    0 0 18px rgba(255,240,180,0.65),
+    0 5px 0 rgba(90,20,0,0.82);
   user-select: none;
 }
 
