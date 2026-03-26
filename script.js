@@ -147,7 +147,8 @@ function createUnit() {
 --------------------------------- */
 function setDigitVisual(slot, digitValue, animate = false, duration = 160) {
   // 1つの数字ブロックの高さを取得
-  const digitHeight = slot.el.clientHeight;
+  const numEl = slot.strip.querySelector(".num");
+  const digitHeight = numEl ? numEl.offsetHeight : slot.el.clientHeight;
 
   // 今の数字状態を更新
   slot.index = digitValue;
@@ -163,7 +164,7 @@ function setDigitVisual(slot, digitValue, animate = false, duration = 160) {
 
   // 目的の数字の位置まで上にずらす量を計算
   const pos = (baseLoop * 10 + digitValue) * digitHeight;
-
+   
   // strip を上方向に移動させる
   slot.strip.style.transform = `translateY(-${pos}px)`;
 }
