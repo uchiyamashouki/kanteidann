@@ -217,7 +217,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: clamp(4px, 0.8vw, 12px);
-  padding: 14px 20px 18px 20px;
+  padding: 10px 20px 18px 24px;/*要微修正*/
   border-radius: 22px;
   background:
     linear-gradient(180deg, rgba(70, 12, 12, 0.92), rgba(35, 5, 5, 0.96)),
