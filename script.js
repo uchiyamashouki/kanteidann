@@ -316,23 +316,9 @@ function wait(ms) {
 spinBtn.addEventListener("click", startSpin);
 revealBtn.addEventListener("click", revealDigits);
 
-function buildSlotsHidden(value) {
-  board.innerHTML = "";
-  slots = [];
-
-  const stage = document.createElement("div");
-  stage.className = "digit-stage";
-  board.appendChild(stage);
-
-  const length = String(value).length;
-
-  for (let i = 0; i < length; i++) {
-    const q = document.createElement("div");
-    q.className = "digit";
-    q.textContent = "?";
-    stage.appendChild(q);
-  }
-}
+input.addEventListener("input", () => {
+  buildSlots(ensureDisplayMatchesInput());
+});
 
 window.addEventListener("resize", () => {
   buildLights();
