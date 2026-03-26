@@ -299,9 +299,9 @@ button:disabled {
 }
 
 /* 0〜9を縦に並べた帯 */
-..strip {
+.strip {
   position: absolute;　
-  top: 0;        
+  top: 0;/*top関数ってあるのかな*/        
   left: 0;
   width: 100%;
   will-change: transform; /* transform が頻繁に変わることをブラウザに伝える */
@@ -309,6 +309,7 @@ button:disabled {
 
 /* 1つ1つの数字 */
 .num {
+  width: 100%;
   height: clamp(68px, 10vw, 110px);
   display: grid;
   place-items: center; /* 文字を中央 */
