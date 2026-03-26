@@ -196,14 +196,18 @@ button:disabled {
 
 /* 数字表示全体の入れ物 */
 .display {
-  position: relative;
-  z-index: 1; /* フラッシュより前 */
-  display: inline-flex;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+
+  display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 100%;
-  width: fit-content;
-  margin: 0 auto;
+
+  width: max-content;
+  max-width: calc(100% - 48px);
 }
 
 /* 数字全体の背景枠 */
@@ -212,7 +216,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(4px, 0.8vw, 12px); /* 桁の間隔 */
+  gap: clamp(4px, 0.8vw, 12px);
   padding: 18px 20px;
   border-radius: 22px;
   background:
@@ -223,7 +227,8 @@ button:disabled {
     inset 0 0 0 1px rgba(255,255,255,0.05),
     inset 0 0 24px rgba(255,210,120,0.08),
     0 10px 30px rgba(0,0,0,0.28);
-  max-width: 100%;
+
+  margin: 0 auto;
 }
 
 /* digit-stage の内側の飾り線 */
@@ -243,7 +248,7 @@ button:disabled {
   flex: 0 0 auto;
 }
 
-/* 1桁分の枠 */
+/* 各桁 */
 .digit {
   width: clamp(38px, 6vw, 74px);
   height: clamp(68px, 10vw, 110px);
@@ -310,14 +315,14 @@ button:disabled {
   width: 100%;
   height: clamp(68px, 10vw, 110px);
   display: grid;
-  place-items: center; /* 文字を中央 */
+  place-items: center;
   font-size: clamp(2rem, 4.4vw, 4.2rem);
   font-weight: 900;
   color: #fff4bf;
   text-shadow:
     0 0 12px rgba(255,240,180,0.55),
     0 4px 0 rgba(90,20,0,0.8);
-  user-select: none; /* ドラッグ選択できないようにする */
+  user-select: none;
 }
 
 /* カンマと単位 */
