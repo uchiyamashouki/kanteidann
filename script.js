@@ -1,10 +1,10 @@
 /* ---------------------------------
    要素取得
 --------------------------------- */
-const input = document.getElementById("numInput");
+const input = document.getElementById("priceInput");
 const spinBtn = document.getElementById("spinBtn");
 const revealBtn = document.getElementById("revealBtn");
-const board = document.getElementById("board");
+const board = document.getElementById("display");
 const message = document.getElementById("message");
 const flash = document.getElementById("flash");
 
