@@ -294,7 +294,6 @@ async function revealDigits() {
     void flash.offsetWidth;
     flash.classList.add("play");
 
-    message.textContent = `参加人数 ${formatted} 人`;
   } else {
     message.textContent = "人数を開示中…「開示する」で次の桁を確定します";
   }
